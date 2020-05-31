@@ -40,20 +40,56 @@ pwr.f2.test(u=1, f2=r.sq/(1-r.sq), power=0.8) #u is the DF of numerator, since t
 
 
 #The result looks:Multiple regression power calculation 
-
 u = 1
 v = 36.66389				
 f2 = 0.2141816
 sig.level = 0.05
 power = 0.8
-
 #Note, the result does not directly tell you N. Rather, since v (the DF of the denominator) was unspecified, and v=N-2, then we infer that the sample size should be
 #	N=37+2=39.
-
-
 # So you see, this R function is not very flexible and intuitive to do PSS for linear model. Normally, you may try different levels of f2, but f2 is a somewhat
 #	abstract parameter, not as easily conceplized as B or SD(x) or SD(y). Reference: http://www.statmethods.net/stats/power.html 
-
-
 #Another R package see http://cran.r-project.org/web/packages/powerMediation/powerMediation.pdf , has functions for SLR, which is easier to use by specifying B
-#	SDx, and SDy directly. 
+#	SDx, and SDy directly.
+
+#One sample proportion
+#sample size
+#H0: p = pnull
+#Ha: p=palt > pnull
+#pow = power
+#alpha=type 1 error rate
+#sss = 1 or 2 sided test
+ssone <- function(pnull, palt, pow , alpha, sss){
+  qnull <- 1-pnull
+  qalt <- 1-palt
+  sqv0 <- sqrt((pnull*qnull))
+  sqv1 <- sqrt((palt*qalt))
+  zalpha <- qnorm(1-alpha/sss)
+  zbeta <- qnorm(pow)
+  numerator <- zalpha*sqv0 + zbeta*sqv1
+  denom <- palt - pnull
+  (numerator/denom)**2
+}
+ssone(.022,.05,.8,.05,1)
+#OR pwr package
+#arcsin transformation
+#ES.h(h of null hypothesis, h of alternative hypothesis)
+h <- ES.h(0.022,0.05)
+pwr.p.test(h=h, n=NULL, sig.level=0.05, power= 0.8, alternative = "less")
+
+#two sample proportion
+#power
+sptwo <- function(p1, p2, n1, n2, alpha){
+  pbar <- (p1+p2)/2
+  delta <- abs(p2-p1)
+  zalpha <- qnorm(1-alpha/2)
+  intn <- (1/n1) + (1/n2)
+  int1 <- (delta/sqrt(pbar*(1-pbar)*intn))
+  pnorm(int1 - zalpha)
+}
+sptwo(0.0233, 0.0430, 13073, 1186, 0.05)
+
+#OR pwr 
+#arcsin transformation
+h <- ES.h(0.233, 0.43)
+pwr.2p2n.test(h, 13073, 1186)
