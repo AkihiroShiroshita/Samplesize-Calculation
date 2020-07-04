@@ -93,3 +93,36 @@ sptwo(0.0233, 0.0430, 13073, 1186, 0.05)
 #arcsin transformation
 h <- ES.h(0.233, 0.43)
 pwr.2p2n.test(h, 13073, 1186)
+
+#Survival analysis
+#sample size calculation
+library(Hmisc) #Need to install Hmisc first
+?cpower #Note: this function is using exponential dist assumption to estimate the prob of having the event
+#by study period. 
+
+tref<-4		#Specify a time at which you have prior knowledge about the survival probablity
+n<-1000		#sample size 
+mc<-0.35	#Probability of having a event by tref, i.e. 1-Survial prob at tref. Obtained from prior
+#data or literature review.
+hr<-0.75	#Hazard ratio. Note: not needed using cpower. Here try to reproduce the breast cancer
+#example
+
+r<-(1-((1-(1-mc)^hr)/mc))*100	#This is 1- the ratio of event probability in intervention group compared to 
+#control group at tref. Can be specified directly without useing 
+#hazard ratio. Note: this should be the percentage, i.e. 20% 
+#reduction in the event prob should enter 20 rather than 0.2 here.
+
+accrual<-2		#Length of accrual period
+tmin<-5			#Minimum length of follow-up 
+
+pwr.res<-cpower(tref=tref, n=n, mc=mc, r=r, accrual=accrual, tmin=tmin)
+
+Nsim<-seq(600,1000, 20)
+pwr.res<-c()
+for (i in 1:length(Nsim) ){
+  pwr.tmp<-cpower(tref=tref, n=Nsim[i], mc=mc, r=r, accrual=accrual, tmin=tmin,pr=FALSE)
+  pwr.res[i]<-pwr.tmp["Power"]
+  
+}
+
+pwr.res.all<-cbind(Nsim, pwr.res)
