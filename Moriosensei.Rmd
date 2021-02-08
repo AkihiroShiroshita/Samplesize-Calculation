@@ -1,0 +1,72 @@
+---
+title: "Sample size calculation for future trials"
+author: "Akihiro Shiroshita"
+date: "2021/2/8"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Sample size calculation  
+```{r include=FALSE}
+library(tidyverse)
+library(meta)
+library(Hmisc)
+```
+
+### Meta-analysis  
+Nanni 2018, Pimentel 2019, Zhao 2017  
+
+```{r cars, echo=TRUE}
+df <- read.csv("data.csv", sep="," , header=T)
+metaprop(event=Event,
+         n=Sample,
+         data=df,
+         studlab=Study,
+         sm="Plogit",
+         comb.fixed=FALSE,
+         comb.random=TRUE,
+         hakn=F,
+         method.tau="DL")
+```
+  
+The pooled 3-year mortality was calculated.    
+
+## Sample size calculation  
+```{r pressure, echo=TRUE}
+tref <- 3 #time at which mortalities estimated
+Nsim <- seq(5000,6000, 100) 
+mc <- 0.74 #tref-year mortality, control
+hr <- 1.13 #hazard ratio.
+r <- (1-((1-(1-mc)^hr)/mc))*100 #% reduction in mc by intervention
+accrual <- 2 #duration of accrual period
+tmin <- 2/12 #minimum follow-up time
+pwr.res<-c()
+for (i in 1:length(Nsim) ){
+  pwr.tmp<-cpower(tref=tref,
+                  n=Nsim[i],
+                  mc=mc,
+                  r=r,
+                  accrual=accrual,
+                  tmin=tmin,
+                  noncomp.c=0,
+                  noncomp.i=0,
+                  alpha=0.05,
+                  pr=FALSE)
+  pwr.res[i]<-pwr.tmp["Power"]
+}
+pwr.res.all<-cbind(Nsim, pwr.res)
+pwr.res.all
+``` 
+  
+A total of 5200 patients will be needed.  
+
+## Methods  
+*Sample size calculation for future trials*  
+We performed sample size calculation for future trials targeting at patients with metastatic/recurrent breast cancer receiving chemotherapy or endocrine therapy. First, we picked up the median follow-up period among the included studies and calculated the pooled event rates using the random-effects model. Then, we simulated trials of comparing the entire survival curves between metformin group and placebo group. We used the following data; $\alpha = 0.05$, $power = 0.8$, study accrual period, percent of drop-ins and non-adherers, the pooled event rates of placebo during the median follow-up period, and the pooled hazard ratio. Parameters were based on the results of systematic review. R version 3.6.0 (R core Team, Vienna, Austria) and packages "meta" (version. 4.16-2) and "Hmisc" (version 4.4-0) were used for sample size calculation.  
+
+## Results  
+*Sample size calculation for future trials*  
+Based on the information gathered from our systematic review, we set the parameters as following; study accrual period of 1 year, no drop-ins or non-adherers, the pooled event rates of 0.74 among the placebo group during the 3-year follow-up period, and the pooled hazard ratio of 1.13.  When randomised controlled trials with a allocation ratio of 1:1 are conducted, a total of 5200 patients will be needed to detect the difference assuming $\alpha = 0.05$ and $power = 0.8$.
